@@ -17,12 +17,9 @@ class Application
      */
     private $_wordsTree;
 
-    public function __construct()
-    {
-        $this->_russianAlphabet = $this->_getRussianAlphabetLettersArray();
-}
 
     public function transform($firstWord, $finalWord) {
+        $this->_russianAlphabet = $this->_getRussianAlphabetLettersArray();
         $this->_finalWord = $finalWord;
         $this->_findSimilarWordsRecursive($firstWord);
 
@@ -76,6 +73,7 @@ class Application
                 }
 
                 $newWord = ($wordLettersArray[0][$currentWordLetter] = $this->_russianAlphabet[0][$currentAlphabetLetter]);
+                $newWord = $this->_implodeLettersArrayIntoWord($newWord);
 
 
 
@@ -112,7 +110,6 @@ class Application
     }
 
     /**
-     * @deprecated This function is useless and will be removed
      * @param $lettersArray
      * @return string
      */
