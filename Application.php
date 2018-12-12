@@ -48,6 +48,9 @@ class Application
     }
 
     /**
+     *
+     * Usage: $russianAlphabetLettersArray[0][0] is equal to 'a'
+     *
      * @return array
      */
     private function _getRussianAlphabetLettersArray() {
@@ -72,7 +75,7 @@ class Application
                     continue;
                 }
 
-                $newWord = $wordLettersArray[0][$currentWordLetter] = $this->_russianAlphabet[0][$currentAlphabetLetter];
+                $newWord = ($wordLettersArray[0][$currentWordLetter] = $this->_russianAlphabet[0][$currentAlphabetLetter]);
 
 
 
@@ -81,11 +84,15 @@ class Application
                  */
 
                 /**
-                 * @todo implement saving of words and their paths (e.g. $this->_wordTree[лужа][ложа][кожа][...][море]) inside @this->_wordTree (attempt is presented below)
+                 * @todo implement saving of words and their paths as array indexes (e.g. $this->_wordTree[лужа][ложа][кожа][...][море]) inside @this->_wordTree (attempt is presented below)
                  */
-                $parentWordPath = $this->getWordPath($word);
-                if ($parentWordPath !== false) {
-                    $this->_wordsTree[$parentWordPath][$newWord];
+                $parentWordIndex = $this->getWordindex($word);
+
+                if ($parentWordIndex !== false && $this->_isUniqueWord($newWord)) {
+                    /**
+                     * @deprecated $this->_wordsTree{$parentWordIndex}[$newWord] = $newWord does not work
+                     */
+                    $this->_wordsTree{$parentWordIndex}[$newWord] = $newWord;
                 } else {
                     continue;
                 }
@@ -94,6 +101,8 @@ class Application
                     /**
                      * @todo Implement end of the script
                      */
+                } else {
+                    $this->_findSimilarWordsRecursive($newWord);
                 }
 
             }
@@ -112,11 +121,65 @@ class Application
     }
 
     /**
-     * @deprecated this function does not work because array_search() cannot process multi-dimensional arrays
+     * @deprecated $this->_arraySearchRecursive() returns index only if $word is not an array
+     * @todo Needs Work
      * @param $word
-     * @return int|string
+     * @return int|string|bool
      */
-    private function getWordPath($word) {
-        return array_search($word, $this->_wordsTree);
+    private function getWordindex($word) {
+        return $this->_arraySearchRecursive($word, $this->_wordsTree);
+    }
+
+    /**
+     * @param  string $needle
+     * @param  array  $haystack
+     * @param  string $currentKey
+     * @return        bool|string
+     */
+    private function _arraySearchRecursive($needle, $haystack, $currentKey = '') {
+        foreach($haystack as $key=>$value) {
+            if (is_array($value)) {
+                $nextKey = $this->_arraySearchRecursive($needle,$value, $currentKey . '[' . $key . ']');
+                if ($nextKey) {
+                    return $nextKey;
+                }
+
+            } elseif ($value==$needle) {
+                return is_numeric($key) ? $currentKey . '[' .$key . ']' : $currentKey . '[' .$key . ']';
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param string|int $key
+     * @param array      $array
+     * @return bool
+     */
+    private function _arrayKeyExistsRecursive($key, $array) {
+        if (array_key_exists($key, $array)) {
+            return true;
+        } else {
+            foreach ($array as $value) {
+                if (is_array($value)) {
+                    if ($this->_arrayKeyExistsRecursive($key, $value)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param string $word
+     * @return bool
+     */
+    private function _isUniqueWord($word) {
+        if ($this->_arrayKeyExistsRecursive($word, $this->_wordsTree)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }
